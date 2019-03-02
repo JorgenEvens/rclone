@@ -450,12 +450,15 @@ func doConfig(id, name string, m configmap.Mapper, errorHandler func(*http.Reque
 		authURL = "http://" + bindAddress + "/auth"
 	}
 
-	// Generate a URL for the user to visit for authorization.
-	_ = open.Start(authURL)
-	fmt.Printf("If your browser doesn't open automatically go to the following link: %s\n", authURL)
-	fmt.Printf("Log in and authorize rclone for access\n")
+    authCode, ok := m.Get("auth_code")
 
-	var authCode string
+	// Generate a URL for the user to visit for authorization.
+    if len(authCode) < 1 {
+        _ = open.Start(authURL)
+        fmt.Printf("If your browser doesn't open automatically go to the following link: %s\n", authURL)
+        fmt.Printf("Log in and authorize rclone for access\n")
+    }
+
 	if useWebServer {
 		// Read the code, and exchange it for a token.
 		fmt.Printf("Waiting for code...\n")
@@ -469,7 +472,7 @@ func doConfig(id, name string, m configmap.Mapper, errorHandler func(*http.Reque
 			}
 			return errors.New("failed to get code")
 		}
-	} else {
+	} else if len(authCode) < 1 {
 		// Read the code, and exchange it for a token.
 		fmt.Printf("Enter verification code> ")
 		authCode = config.ReadLine()
